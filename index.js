@@ -4,6 +4,8 @@ const fs = require('fs');
 const rateLimit = require('express-rate-limit');
 const xss = require('xss-clean');
 const helmet = require('helmet'); 
+const { default: contentSecurityPolicy } = require('helmet/dist/middlewares/content-security-policy');
+const { response } = require('express');
 
 const serverName = "xx"; //server name - the domain name, xx.domainname.com
 const serverDir = "ubuntu"; //serverHomeDirName - the home directory of the user running this script
@@ -27,13 +29,28 @@ app.use(xss());
 app.use(helmet());
 //SECURITY END
 //API START
-app.get('/api/login/:username/:password', (req, res) => {
-    let usernameTest = req.params.username;
-    let passwordTest = req.params.password;
-    console.log(usernameTest);
-    console.log(passwordTest);
-    res.send("Working I think");
-})
+
+app.post('/api/login', function (req, res) {
+    response = { //test for JSON sending
+        username: req.body.username,
+        password: req.body.password
+    };
+    let username = req.body.username;
+    let password = req.body.password;
+    console.log(req.body);
+    console.log("username:" + username);
+    console.log("password:" + password);
+    res.send(JSON.stringify(response)); 
+});
+app.post('/api/register', function (req, res) {
+    let username = req.body.username;
+    let password = req.body.password;
+    console.log(req.body);
+    console.log("username:" + username);
+    console.log("password:" + password);
+    res.send("OK");
+});
+
 //PORT LISTEN START
 var httpsServer = https.createServer(credentials, app);
 httpsServer.listen(8888);
