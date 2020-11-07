@@ -6,9 +6,16 @@ const xss = require('xss-clean');
 const helmet = require('helmet'); 
 const { default: contentSecurityPolicy } = require('helmet/dist/middlewares/content-security-policy');
 const { response } = require('express');
+var mysql = require('mysql');  
+var con = mysql.createConnection({  
+    host:'localhost',  
+    user:'xx',  
+    password:'xx',  
+    database:'mysql'  
+}); 
 
 const serverName = "xx"; //server name - the domain name, xx.domainname.com
-const serverDir = "ubuntu"; //serverHomeDirName - the home directory of the user running this script
+
 var privateKey  = fs.readFileSync('/etc/letsencrypt/live/' + serverName + '.sunnahvpn.com/privkey.pem', 'utf8');
 var certificate = fs.readFileSync('/etc/letsencrypt/live/' + serverName + '.sunnahvpn.com/fullchain.pem', 'utf8');
 var credentials = {key: privateKey, cert: certificate};
@@ -40,6 +47,8 @@ app.post('/api/login', function (req, res) {
     console.log(req.body);
     console.log("username:" + username);
     console.log("password:" + password);
+    let func = await login(username, password);
+    console.log(func);
     res.send(JSON.stringify(response)); 
 });
 app.post('/api/register', function (req, res) {
@@ -51,6 +60,14 @@ app.post('/api/register', function (req, res) {
     res.send("OK");
 });
 
+async function login(username, password) {
+    var query = "SELECT * FROM authentication"
+    con.query(query,function(err,rows){  
+        if(err)  
+            throw err;  
+        console.log(rows);  
+    });  
+}
 //PORT LISTEN START
 var httpsServer = https.createServer(credentials, app);
 httpsServer.listen(8888);
