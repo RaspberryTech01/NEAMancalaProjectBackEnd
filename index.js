@@ -13,7 +13,10 @@ var con = mysql.createConnection({
     password:'xx',  
     database:'mysql'  
 }); 
-
+con.connect(function(err) {
+    if (err) throw err;
+    console.log("Connected!");
+});
 const serverName = "xx"; //server name - the domain name, xx.domainname.com
 
 var privateKey  = fs.readFileSync('/etc/letsencrypt/live/' + serverName + '.sunnahvpn.com/privkey.pem', 'utf8');
@@ -37,21 +40,22 @@ app.use(helmet());
 //SECURITY END
 //API START
 
-app.post('/api/login', function (req, res) {
-    response = { //test for JSON sending
-        username: req.body.username,
-        password: req.body.password
-    };
+app.post('/api/login', async function (req, res) {
     let username = req.body.username;
     let password = req.body.password;
     console.log(req.body);
     console.log("username:" + username);
     console.log("password:" + password);
+
     let func = await login(username, password);
-    console.log(func);
+    //console.log(func);
+    let response = { //test for JSON sending
+        apiResponse: func
+    };
+    //res.send(func);
     res.send(JSON.stringify(response)); 
 });
-app.post('/api/register', function (req, res) {
+app.post('/api/register', async function (req, res) {
     let username = req.body.username;
     let password = req.body.password;
     console.log(req.body);
@@ -60,12 +64,28 @@ app.post('/api/register', function (req, res) {
     res.send("OK");
 });
 
-async function login(username, password) {
-    var query = "SELECT * FROM authentication"
-    con.query(query,function(err,rows){  
-        if(err)  
-            throw err;  
-        console.log(rows);  
+function login (username, password){  
+    var promise = new Promise(function (resolve, reject) {
+        var query = "SELECT * FROM authentication WHERE Username = '" + username + "'";
+        con.query(query,function(err,result,fields){
+            if(err)  
+                throw err;  
+            if (result.length > 0) {
+                console.log(result);  
+                let usernameResult = result[0].Username; //result[0] since we only expect one result to be returned
+                let passwordResult = result[0].Password;
+                console.log({passwordResult});
+                if (passwordResult == password) {
+                    resolve("Logged in!");
+                }
+                else{
+                    resolve("Wrong Username or Password");
+                }
+            }
+            else{
+                resolve("Wrong Username or Password");
+            }
+        });
     });  
 }
 //PORT LISTEN START
