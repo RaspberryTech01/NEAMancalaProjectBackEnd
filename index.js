@@ -31,7 +31,7 @@ const limit = rateLimit({
     windowMs: 60 * 60 * 1000, // 1 Hour
     message: 'Too many requests' // message to send
 });
-app.use('/api/', limit); // Setting limiter on specific route
+app.use('/api/', limit); // Setting limiter on specific routes
 
 // Data Sanitization against XSS
 app.use(xss());
