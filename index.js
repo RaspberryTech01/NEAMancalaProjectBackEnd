@@ -50,7 +50,8 @@ app.post('/api/login', async function (req, res) {
     let func = await login(username, password);
     //console.log(func);
     let response = { //test for JSON sending
-        apiResponse: func
+        apiResponse: func[0],
+        UserID: func[1]
     };
     //res.send(func);
     res.send(JSON.stringify(response)); 
@@ -61,7 +62,15 @@ app.post('/api/register', async function (req, res) {
     console.log(req.body);
     console.log("username:" + username);
     console.log("password:" + password);
-    res.send("OK");
+    let func = await register(username, password);
+    //console.log(func);
+    let response = { //test for JSON sending
+        apiResponse: func[0],
+        UserID: func[1]
+    };
+    //res.send(func);
+    res.send(JSON.stringify(response)); 
+    
 });
 
 function login (username, password){  
@@ -74,16 +83,63 @@ function login (username, password){
                 console.log(result);  
                 let usernameResult = result[0].Username; //result[0] since we only expect one result to be returned
                 let passwordResult = result[0].Password;
+                let userIDResult = result[0].UserID;
                 console.log({passwordResult});
                 if (passwordResult == password) {
-                    resolve("Logged in!");
+                    resolve([true, userIDResult]);
                 }
                 else{
-                    resolve("Wrong Username or Password");
+                    resolve([false, "null"]);
                 }
             }
             else{
-                resolve("Wrong Username or Password");
+                resolve([false, "null"]);
+            }
+        });
+    });  
+}
+
+function register(username, password){
+    var promise = new Promise(function (resolve, reject) {
+        let date_ob = new Date();
+        let year = date_ob.getFullYear();
+        let month = ("0" + (date_ob.getMonth() + 1)).slice(-2);
+        let date = ("0" + date_ob.getDate()).slice(-2);
+
+        var query = "INSERT INTO authentication (Username, Password, LastLogin) VALUES ('" + username + "', '" + password + "', '"+ year +"-"+ month +"-"+ da>
+        con.query(query,function(err,result,fields){
+            if(err)  
+                throw err;  
+            if (result.length > 0) {
+                console.log(result);
+                console.log("INSERTED");  
+            }
+            console.log("INSERTED1");
+        });
+
+        //let userIDResult;
+        var queryTwo = "SELECT UserID FROM authentication WHERE Username = '" + username + "'";
+        con.query(queryTwo, async function(err,result,fields){
+            if(err)  
+                throw err;  
+            if (result.length > 0) {
+                console.log(result);  
+                setTimeout (function(){
+                    let userIDResult = result[0].UserID; //result[0] since we only expect one result to be returned
+                    console.log({userIDResult});
+                    var queryThree = "INSERT INTO player(UserID, Wins, Losses, TotalScore) VALUES ("+ userIDResult +", 0, 0, 0);";
+                    con.query(queryThree,function(err,result,fields){
+                        if(err){
+                            throw err;  
+                        }
+                        else{
+                            resolve([true, userIDResult]);
+                        }
+                    });
+                }, 100)
+            }
+            else{
+                resolve([false, "null"]);
             }
         });
     });  
