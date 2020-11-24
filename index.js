@@ -11,7 +11,7 @@ var mysql = require('mysql');
 var con = mysql.createConnection({  
     host:'localhost',  
     user:'xx',  
-    password:'xx',  
+    Password:'xx',  
     database:'mysql'  
 }); 
 con.connect(function(err) {
@@ -42,32 +42,37 @@ app.use(helmet());
 //API START
 
 app.post('/api/login', async function (req, res) {
-    let username = req.body.username; //TEST START
-    let password = req.body.password;
+    let Username = req.body.Username; //TEST START
+    let Password = req.body.Password;
     console.log(req.body);
-    console.log("username:" + username);
-    console.log("password:" + password); //TEST END
+    console.log("Username:" + Username);
+    console.log("Password:" + Password); //TEST END
 
-    let func = await login(username, password);
+    let func = await login(Username, Password);
+
     //console.log(func);
     let response = { //test for JSON sending
-        apiResponse: func[0],
-        UserID: func[1]
+        ApiResponse: func[0],
+        UserID: func[1],
+        AuthKey: func[2],
+        Wins: func[3],
+        Losses: func[4],
+        TotalScore: func[5]
     };
     //res.send(func);
     res.send(JSON.stringify(await response)); 
 });
 app.post('/api/register', async function (req, res) {
-    let username = req.body.username; //TEST START
-    let password = req.body.password;
+    let Username = req.body.Username; //TEST START
+    let Password = req.body.Password;
     console.log(req.body);
-    console.log("username:" + username);
-    console.log("password:" + password);//TEST  END
+    console.log("Username:" + Username);
+    console.log("Password:" + Password);//TEST  END
     
-    let func = await register(username, password);
+    let func = await register(Username, Password);
     //console.log(func);
     let response = { //test for JSON sending
-        apiResponse: func[0],
+        ApiResponse: func[0],
         UserID: func[1],
         AuthKey: func[2]
     };
@@ -77,12 +82,12 @@ app.post('/api/register', async function (req, res) {
 
 app.post('/api/getinfo', async function (req, res) {
     let userID = req.body.userID; //TEST START
-    let password = req.body.password;
+    let Password = req.body.Password;
     console.log(req.body);
-    console.log("username:" + username);
-    console.log("password:" + password);//TEST  END
+    console.log("Username:" + Username);
+    console.log("Password:" + Password);//TEST  END
     
-    let func = await register(username, password);
+    let func = await register(Username, Password);
     //console.log(func);
     let response = { //test for JSON sending
         apiResponse: func[0],
@@ -92,7 +97,7 @@ app.post('/api/getinfo', async function (req, res) {
     res.send(JSON.stringify(await response)); 
 });
 
-async function login(username, password) {  
+async function login(Username, Password) {  
     var promise = new Promise(async function (resolve, reject) {
         //DATE
         let date_ob = new Date();
@@ -100,53 +105,70 @@ async function login(username, password) {
         let month = ("0" + (date_ob.getMonth() + 1)).slice(-2);
         let date = ("0" + date_ob.getDate()).slice(-2);
         //QUERY
-        var query = "SELECT * FROM authentication WHERE Username = '" + username + "'";
+        var query = "SELECT * FROM authentication WHERE Username = '" + Username + "'";
         con.query(query,function(err,result,fields){
             if(err)  
                 throw err;  
             if (result.length > 0) {
                 //console.log(result);  
                 let usernameResult = result[0].Username; //result[0] since we only expect one result to be returned
-                let passwordResult = result[0].Password;
+                let PasswordResult = result[0].Password;
                 let userIDResult = result[0].UserID;
+
+                
                 let authKey = str.random(32); //random 16 value
 
-                console.log({passwordResult});
-                if (passwordResult == password) {
-                    var query = "UPDATE authentication SET LastLogin = '" + year + "-" + month + "-" + date + "', AuthKey ='" + authKey + "' WHERE UserID = " + userIDResult;
-                    
-                    con.query(query,function(err,result,fields){
-                    if(err)  
-                            throw err;  
-                    });
-                    resolve([true, userIDResult, authKey]);
+                console.log({PasswordResult});
+                try{
+                    if (PasswordResult == Password) {
+                        var query = "UPDATE authentication SET LastLogin = '" + year + "-" + month + "-" + date + "', AuthKey ='" + authKey + "' WHERE UserID = " + userIDResult;
+                        
+                        con.query(query,function(err,result,fields){
+                        if(err)  
+                                throw err;  
+                        })
+
+                        var query = "SELECT * FROM player WHERE UserID = '" + userIDResult + "'";
+                        con.query(query,function(err,result,fields){
+                        if(err)  
+                                throw err;  
+                        })
+                        let wins = result[0].Wins;
+                        let losses = result[0].Losses;
+                        let totalScore = result[0].TotalScore
+                        resolve([true, userIDResult, authKey, wins, losses, totalScore]);
+                    }
+                    else{
+                        resolve([false, "null", false, false, false]);
+                    }
                 }
-                else{
-                    resolve([false, "null"]);
+                catch{
+                    resolve([false, "null", false, false, false]);
                 }
+                
             }
             else{
-                resolve([false, "null"]);
+                resolve([false, "null", false, false, false]);
             }
         });
     });  
     return promise;
 }
 
-function abusarah(username, password) {
-    async query = (con, stmt) => new Promise((resolve, reject) => {
-        con.query(stmt, (err, result) => {
-            if (err) {
-                reject(err)
-            } else {
-                resolve(result)
-            }
-        });
-    })
-};
+// function abusarah(Username, Password) {
+//     async query = (con, stmt) => new Promise((resolve, reject) => {
+//         con.query(stmt, (err, result) => {
+//             if (err) {
+//                 reject(err)
+//             } else {
+//                 resolve(result)
+//             }
+//         });
+//     })
+// };
 // example
 // let result = await query(con, "select * from Table1");
-//     var queryTwo = "SELECT UserID FROM authentication WHERE Username = '" + username + "'";
+//     var queryTwo = "SELECT UserID FROM authentication WHERE Username = '" + Username + "'";
 //         con.query(queryTwo, function(err,result,fields){
 //             if(err)  
 //                 throw err;  
@@ -158,62 +180,83 @@ function abusarah(username, password) {
 //     });
 
 
-async function register(username, password){
-    var promise = new Promise(async function (resolve, reject) {
-        let date_ob = new Date();
-        let year = date_ob.getFullYear();
-        let month = ("0" + (date_ob.getMonth() + 1)).slice(-2);
-        let date = ("0" + date_ob.getDate()).slice(-2);
-        let authKey = str.random(32); //random 16 value
-
-        var queryTwo = "SELECT UserID FROM authentication WHERE Username = '" + username + "'";
+async function register(Username, Password){
+    let date_ob = new Date();
+    let year = date_ob.getFullYear();
+    let month = ("0" + (date_ob.getMonth() + 1)).slice(-2);
+    let date = ("0" + date_ob.getDate()).slice(-2);
+    let authKey = str.random(32); //random 16 value
+    let breakOut = false;
+    try{
+        var queryOne = "SELECT UserID FROM authentication WHERE Username = '" + Username + "'";
+        con.query(queryOne, async function(err,result,fields){
+            try{
+                if(err)  
+                throw err;  
+                if (result.length > 0) {
+                    return([false, false, false]);
+                    breakOut = true;
+                    //break here;
+                }
+            }catch(err){console.log(err)}
+            
+        });
+    }
+    catch(err){
+        console.log(err);
+    }
+    if(breakOut){
+        return([false, false, false]);
+    }
+    try{
+        var insertOne = "INSERT INTO authentication (Username, Password, LastLogin, AuthKey) VALUES ('" + Username + "', '" + Password + "', '"+ year +"-"+ month +"-"+ date +"', '" + authKey + "');"; 
+        con.query(insertOne, async function(err,result,fields){
+            try{
+                if(err)  
+                    throw err;  
+                if (result.length > 0) {
+                    console.log(result);
+                    console.log("INSERTED");  
+                }
+                console.log("INSERTED1");
+            }catch(err){console.log(err)}
+        });
+    }
+    catch(err){
+        console.log(err);
+    }
+    
+    try{
+        var queryTwo = "SELECT UserID FROM authentication WHERE Username = '" + Username + "'";
         con.query(queryTwo, function(err,result,fields){
-            if(err)  
-                throw err;  
-            if (result.length > 0) {
-                resolve([false]);
-                return promise;
-                //break here;
-            }
+            try{
+                if(err)  
+                    throw err;  
+                if (result.length > 0) {
+                    //console.log(result);  
+                    let userIDResult = result[0].UserID; //result[0] since we only expect one result to be returned
+                    //console.log(userIDResult);
+                    var insertTwo = "INSERT INTO player(UserID, Wins, Losses, TotalScore) VALUES ("+ userIDResult +", 0, 0, 0);";
+                    con.query(insertTwo,function(err,result,fields){
+                        if(err){
+                            throw err;  
+                        }
+                        else{
+                            return([true, userIDResult, authKey]);
+                        }
+                    });
+                }
+                else{
+                    return([false, false, false]);
+                }
+            }catch (err){console.log(err)}
         });
-        var query = "INSERT INTO authentication (Username, Password, LastLogin, AuthKey) VALUES ('" + username + "', '" + password + "', '"+ year +"-"+ month +"-"+ date +"', '" + authKey + "') WHERE <> "+ username +";"; 
-        con.query(query, function(err,result,fields){
-            if(err)  
-                throw err;  
-            if (result.length > 0) {
-                console.log(result);
-                console.log("INSERTED");  
-            }
-            console.log("INSERTED1");
-        });
-
-        //let userIDResult;
-        var queryTwo = "SELECT UserID FROM authentication WHERE Username = '" + username + "'";
-        con.query(queryTwo, function(err,result,fields){
-            if(err)  
-                throw err;  
-            if (result.length > 0) {
-                //console.log(result);  
-                let userIDResult = result[0].UserID; //result[0] since we only expect one result to be returned
-                //console.log(userIDResult);
-                var queryThree = "INSERT INTO player(UserID, Wins, Losses, TotalScore) VALUES ("+ userIDResult +", 0, 0, 0);";
-                con.query(queryThree,function(err,result,fields){
-                    if(err){
-                        throw err;  
-                    }
-                    else{
-                        resolve([true, userIDResult, authKey]);
-                        return promise;
-                    }
-                });
-            }
-            else{
-                resolve([false]);
-                return promise;
-            }
-        });
-    });  
-    return promise;
+    }
+    catch(err){
+        console.log(err);
+    }
+    //let userIDResult;
+    return([false, false, false]);
 }
 
 
