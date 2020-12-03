@@ -177,41 +177,16 @@ async function register(Username, Password){
    
     try{
         var insertOne = "INSERT INTO authentication (Username, Password, LastLogin, AuthKey) VALUES ('" + Username + "', '" + Password + "', '"+ year +"-"+ month +"-"+ date +"', '" + authKey + "');"; 
-        con.query(insertOne, async function(err,result,fields){
-            try{
-                if(err)  
-                    throw err;  
-                if (result.length > 0) {
-                    console.log(result);
-                    console.log("INSERTED");  
-                }
-                console.log("INSERTED1");
-            }catch(err){console.log(err)}
-        });
+        await query(insertOne);
 
-        var queryTwo = "SELECT UserID FROM authentication WHERE Username = '" + Username + "'";
-        con.query(queryTwo, function(err,result,fields){
-            if(err)  
-                throw err;  
-            if (result.length > 0) {
-                //console.log(result);  
-                let userIDResult = result[0].UserID; //result[0] since we only expect one result to be returned
-                //console.log(userIDResult);
-                var insertTwo = "INSERT INTO player(UserID, Wins, Losses, TotalScore) VALUES ("+ userIDResult +", 0, 0, 0);";
-                con.query(insertTwo,function(err,result,fields){
-                    if(err){
-                        throw err;  
-                    }
-                    else{
-                        return([true, userIDResult, authKey]);
-                    }
-                });
-            }
-            else{
-                return([false, false, false]);
-            }
-            
-        });
+        var queryOne = "SELECT UserID FROM authentication WHERE Username = '" + Username + "'";
+        let selectResultOne = await query(queryOne);
+        if (selectResultOne.length > 0){
+            let userIDResult = selectResultOne[0].UserID;
+            var insertTwo = "INSERT INTO player(UserID, Wins, Losses, TotalScore) VALUES ("+ userIDResult +", 0, 0, 0);";
+            let insertResultTwo = await query(insertTwo);
+            return([true, userIDResult, authKey]);
+        }
     }
     catch(err){
         console.log(err);
@@ -219,8 +194,6 @@ async function register(Username, Password){
     //let userIDResult;
     return([false, false, false]);
 }
-
-
 
 //PORT LISTEN START
 var httpsServer = https.createServer(credentials, app);
