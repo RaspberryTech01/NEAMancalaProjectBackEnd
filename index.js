@@ -97,6 +97,17 @@ app.post('/api/getinfo', async function (req, res) {
     res.send(JSON.stringify(await response)); 
 });
 
+const query = (q) => new Promise((resolve, reject) => {
+    con.query(q, function (err, result, fields) {
+      if (err) {
+        reject(err);
+        return;
+      }
+  
+      resolve(result);
+    });
+  }); 
+  
 async function login(Username, Password) {  
     var promise = new Promise(async function (resolve, reject) {
         //DATE
@@ -121,6 +132,7 @@ async function login(Username, Password) {
                 console.log({PasswordResult});
                 try{
                     if (PasswordResult == Password) {
+                        
                         var query = "UPDATE authentication SET LastLogin = '" + year + "-" + month + "-" + date + "', AuthKey ='" + authKey + "' WHERE UserID = " + userIDResult;
                         
                         con.query(query,function(err,result,fields){
@@ -155,31 +167,6 @@ async function login(Username, Password) {
     return promise;
 }
 
-// function abusarah(Username, Password) {
-//     async query = (con, stmt) => new Promise((resolve, reject) => {
-//         con.query(stmt, (err, result) => {
-//             if (err) {
-//                 reject(err)
-//             } else {
-//                 resolve(result)
-//             }
-//         });
-//     })
-// };
-// example
-// let result = await query(con, "select * from Table1");
-//     var queryTwo = "SELECT UserID FROM authentication WHERE Username = '" + Username + "'";
-//         con.query(queryTwo, function(err,result,fields){
-//             if(err)  
-//                 throw err;  
-//             if (result.length > 0) {
-//                 resolve([false]);
-//                 return promise;
-//                 //break here;
-//             }
-//     });
-
-
 async function register(Username, Password){
     let date_ob = new Date();
     let year = date_ob.getFullYear();
@@ -187,27 +174,7 @@ async function register(Username, Password){
     let date = ("0" + date_ob.getDate()).slice(-2);
     let authKey = str.random(32); //random 16 value
     let breakOut = false;
-    try{
-        var queryOne = "SELECT UserID FROM authentication WHERE Username = '" + Username + "'";
-        con.query(queryOne, async function(err,result,fields){
-            try{
-                if(err)  
-                throw err;  
-                if (result.length > 0) {
-                    return([false, false, false]);
-                    breakOut = true;
-                    //break here;
-                }
-            }catch(err){console.log(err)}
-            
-        });
-    }
-    catch(err){
-        console.log(err);
-    }
-    if(breakOut){
-        return([false, false, false]);
-    }
+   
     try{
         var insertOne = "INSERT INTO authentication (Username, Password, LastLogin, AuthKey) VALUES ('" + Username + "', '" + Password + "', '"+ year +"-"+ month +"-"+ date +"', '" + authKey + "');"; 
         con.query(insertOne, async function(err,result,fields){
@@ -221,35 +188,29 @@ async function register(Username, Password){
                 console.log("INSERTED1");
             }catch(err){console.log(err)}
         });
-    }
-    catch(err){
-        console.log(err);
-    }
-    
-    try{
+
         var queryTwo = "SELECT UserID FROM authentication WHERE Username = '" + Username + "'";
         con.query(queryTwo, function(err,result,fields){
-            try{
-                if(err)  
-                    throw err;  
-                if (result.length > 0) {
-                    //console.log(result);  
-                    let userIDResult = result[0].UserID; //result[0] since we only expect one result to be returned
-                    //console.log(userIDResult);
-                    var insertTwo = "INSERT INTO player(UserID, Wins, Losses, TotalScore) VALUES ("+ userIDResult +", 0, 0, 0);";
-                    con.query(insertTwo,function(err,result,fields){
-                        if(err){
-                            throw err;  
-                        }
-                        else{
-                            return([true, userIDResult, authKey]);
-                        }
-                    });
-                }
-                else{
-                    return([false, false, false]);
-                }
-            }catch (err){console.log(err)}
+            if(err)  
+                throw err;  
+            if (result.length > 0) {
+                //console.log(result);  
+                let userIDResult = result[0].UserID; //result[0] since we only expect one result to be returned
+                //console.log(userIDResult);
+                var insertTwo = "INSERT INTO player(UserID, Wins, Losses, TotalScore) VALUES ("+ userIDResult +", 0, 0, 0);";
+                con.query(insertTwo,function(err,result,fields){
+                    if(err){
+                        throw err;  
+                    }
+                    else{
+                        return([true, userIDResult, authKey]);
+                    }
+                });
+            }
+            else{
+                return([false, false, false]);
+            }
+            
         });
     }
     catch(err){
