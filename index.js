@@ -2,7 +2,6 @@ const express = require('express');
 const https = require('https');
 const fs = require('fs');
 const rateLimit = require('express-rate-limit');
-const xss = require('xss-clean');
 const helmet = require('helmet'); 
 const str = require('@supercharge/strings')
 const { default: contentSecurityPolicy } = require('helmet/dist/middlewares/content-security-policy');
@@ -20,22 +19,20 @@ con.connect(function(err) {
 });
 const serverName = "xx"; //server name - the domain name, xx.domainname.com
 
-var privateKey  = fs.readFileSync('/etc/letsencrypt/live/' + serverName + '.sunnahvpn.com/privkey.pem', 'utf8');
-var certificate = fs.readFileSync('/etc/letsencrypt/live/' + serverName + '.sunnahvpn.com/fullchain.pem', 'utf8');
+var privateKey  = fs.readFileSync('/etc/letsencrypt/live/' + serverName + '.sunnahvpn.com/privkey.pem', 'utf8'); //location to https private key
+var certificate = fs.readFileSync('/etc/letsencrypt/live/' + serverName + '.sunnahvpn.com/fullchain.pem', 'utf8'); //location to fullchain key
 var credentials = {key: privateKey, cert: certificate};
 const app = express();
 
 app.use(express.json({ limit: '10kb' })); // Body limit is 10
 //SECURITY START 
 const limit = rateLimit({
-    max: 100,// max requests
+    max: 100, // max requests
     windowMs: 60 * 60 * 1000, // 1 Hour
     message: 'Too many requests' // message to send
 });
 app.use('/api/', limit); // Setting limiter on specific routes
 
-// Data Sanitization against XSS
-app.use(xss());
 // adding Helmet to enhance your API's security
 app.use(helmet());
 //SECURITY END
@@ -50,7 +47,6 @@ app.post('/api/login', async function (req, res) {
 
     let func = await login(Username, Password);
 
-    //console.log(func);
     let response = { //test for JSON sending
         ApiResponse: func[0],
         UserID: func[1],
@@ -59,8 +55,7 @@ app.post('/api/login', async function (req, res) {
         Losses: func[4],
         TotalScore: func[5]
     };
-    //res.send(func);
-    res.send(JSON.stringify(await response)); 
+    res.send(JSON.stringify(response)); 
 });
 app.post('/api/register', async function (req, res) {
     let Username = req.body.Username; //TEST START
@@ -70,31 +65,28 @@ app.post('/api/register', async function (req, res) {
     console.log("Password:" + Password);//TEST  END
     
     let func = await register(Username, Password);
-    //console.log(func);
     let response = { //test for JSON sending
         ApiResponse: func[0],
         UserID: func[1],
         AuthKey: func[2]
     };
-    //res.send(func);
-    res.send(JSON.stringify(await response)); 
+    res.send(JSON.stringify(response)); 
 });
 
 app.post('/api/getinfo', async function (req, res) {
-    let userID = req.body.userID; //TEST START
-    let Password = req.body.Password;
+    let UserID = req.body.UserID; //TEST START
+    let AuthKey = req.body.AuthKey;
     console.log(req.body);
-    console.log("Username:" + Username);
-    console.log("Password:" + Password);//TEST  END
+    console.log("UserID:" + UserID);
+    console.log("AuthKey:" + AuthKey);//TEST  END
     
-    let func = await register(Username, Password);
-    //console.log(func);
+    let func = await getInfo(UserID, AuthKey);
     let response = { //test for JSON sending
-        apiResponse: func[0],
-        UserID: func[1]
+        ApiResponse: func[0],
+        AISave: func[1],
+        UserSave: func[2]
     };
-    //res.send(func);
-    res.send(JSON.stringify(await response)); 
+    res.send(JSON.stringify(response)); 
 });
 
 const query = (q) => new Promise((resolve, reject) => {
@@ -121,33 +113,23 @@ async function login(Username, Password) {
             if(err)  
                 throw err;  
             if (result.length > 0) {
-                //console.log(result);  
                 let usernameResult = result[0].Username; //result[0] since we only expect one result to be returned
                 let PasswordResult = result[0].Password;
                 let userIDResult = result[0].UserID;
-
-                
                 let authKey = str.random(32); //random 16 value
 
-                console.log({PasswordResult});
                 try{
                     if (PasswordResult == Password) {
                         
-                        var query = "UPDATE authentication SET LastLogin = '" + year + "-" + month + "-" + date + "', AuthKey ='" + authKey + "' WHERE UserID = " + userIDResult;
-                        
-                        con.query(query,function(err,result,fields){
-                        if(err)  
-                                throw err;  
-                        })
+                        var updateOne = "UPDATE authentication SET LastLogin = '" + year + "-" + month + "-" + date + "', AuthKey ='" + authKey + "' WHERE UserID = " + userIDResult;
+                        await query(updateOne);
 
-                        var query = "SELECT * FROM player WHERE UserID = '" + userIDResult + "'";
-                        con.query(query,function(err,result,fields){
-                        if(err)  
-                                throw err;  
-                        })
-                        let wins = result[0].Wins;
-                        let losses = result[0].Losses;
-                        let totalScore = result[0].TotalScore
+                        var queryTwo = "SELECT * FROM player WHERE UserID = '" + userIDResult + "'";
+                        let selectResultTwo = await query(queryTwo)
+                        let wins = selectResultTwo[0].Wins;
+                        let losses = selectResultTwo[0].Losses;
+                        let totalScore = selectResultTwo[0].TotalScore;
+                        //add user game ID
                         resolve([true, userIDResult, authKey, wins, losses, totalScore]);
                     }
                     else{
@@ -157,7 +139,6 @@ async function login(Username, Password) {
                 catch{
                     resolve([false, "null", false, false, false]);
                 }
-                
             }
             else{
                 resolve([false, "null", false, false, false]);
@@ -194,7 +175,24 @@ async function register(Username, Password){
     //let userIDResult;
     return([false, false, false]);
 }
+async function getInfo(Username, UserID, AuthKey){
+    try{
+        var queryOne = `SELECT AuthKey FROM authentication where UserID = ${UserID}`;
+        let selectResultOne = await query(queryOne);
+        if (selectResultOne.length > 0){
+            let authKeyResult = selectResultOne[0].AuthKey;
+            if(authKeyResult == AuthKey){
 
+            }
+            else{
+
+            }
+        }
+    }
+    catch(err){
+
+    }
+}
 //PORT LISTEN START
 var httpsServer = https.createServer(credentials, app);
 httpsServer.listen(8888);
