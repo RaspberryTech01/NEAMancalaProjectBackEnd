@@ -11,7 +11,7 @@ var con = mysql.createConnection({
     host:'localhost',  
     user:'xx',  
     Password:'xx',  
-    database:'mysql'  
+    database:'congkak'  
 }); 
 con.connect(function(err) {
     if (err) throw err;
@@ -67,24 +67,26 @@ app.post('/api/register', async function (req, res) {
     let func = await register(Username, Password);
     let response = { //test for JSON sending
         ApiResponse: func[0],
-        UserID: func[1],
-        AuthKey: func[2]
+        UserID: func[1]
     };
     res.send(JSON.stringify(response)); 
 });
 
 app.post('/api/getinfo', async function (req, res) {
-    let UserID = req.body.UserID; //TEST START
+    let Username = req.body.Username; //TEST START
+    let UserID = req.body.UserID; 
     let AuthKey = req.body.AuthKey;
     console.log(req.body);
     console.log("UserID:" + UserID);
     console.log("AuthKey:" + AuthKey);//TEST  END
     
-    let func = await getInfo(UserID, AuthKey);
+    let func = await getInfo(Username, UserID, AuthKey);
     let response = { //test for JSON sending
         ApiResponse: func[0],
-        AISave: func[1],
-        UserSave: func[2]
+        UserGameID: func[1],
+        AISave: func[2],
+        UserSave: func[2],
+        WhichTurn: func[3]
     };
     res.send(JSON.stringify(response)); 
 });
@@ -101,51 +103,46 @@ const query = (q) => new Promise((resolve, reject) => {
   }); 
   
 async function login(Username, Password) {  
-    var promise = new Promise(async function (resolve, reject) {
-        //DATE
+    //DATE
+    try{
         let date_ob = new Date();
         let year = date_ob.getFullYear();
         let month = ("0" + (date_ob.getMonth() + 1)).slice(-2);
         let date = ("0" + date_ob.getDate()).slice(-2);
         //QUERY
-        var query = "SELECT * FROM authentication WHERE Username = '" + Username + "'";
-        con.query(query,function(err,result,fields){
-            if(err)  
-                throw err;  
-            if (result.length > 0) {
-                let usernameResult = result[0].Username; //result[0] since we only expect one result to be returned
-                let PasswordResult = result[0].Password;
-                let userIDResult = result[0].UserID;
-                let authKey = str.random(32); //random 16 value
+        let queryOne = `SELECT * FROM authentication WHERE Username = "${Username}";`;
+        let selectResultOne = await query(queryOne);
+        if(selectResultOne.length > 0){
+            try{
+                let PasswordResult = selectResultOne[0].Password;
+                let authKey = str.random(32); //random 32 bit value
+                if (PasswordResult == Password) {
+                    
+                    var updateOne = `UPDATE authentication SET LastLogin = "${year}-${month}-${date}", AuthKey = "${authKey}" WHERE Username = "${Username}";`;
+                    await query(updateOne);
 
-                try{
-                    if (PasswordResult == Password) {
-                        
-                        var updateOne = "UPDATE authentication SET LastLogin = '" + year + "-" + month + "-" + date + "', AuthKey ='" + authKey + "' WHERE UserID = " + userIDResult;
-                        await query(updateOne);
-
-                        var queryTwo = "SELECT * FROM player WHERE UserID = '" + userIDResult + "'";
-                        let selectResultTwo = await query(queryTwo)
-                        let wins = selectResultTwo[0].Wins;
-                        let losses = selectResultTwo[0].Losses;
-                        let totalScore = selectResultTwo[0].TotalScore;
-                        //add user game ID
-                        resolve([true, userIDResult, authKey, wins, losses, totalScore]);
-                    }
-                    else{
-                        resolve([false, "null", false, false, false]);
-                    }
+                    var queryTwo = `SELECT * FROM player WHERE Username = "${Username}";`;
+                    let selectResultTwo = await query(queryTwo)
+                    let userIDResult = selectResultTwo[0].UserID;
+                    let wins = selectResultTwo[0].Wins;
+                    let losses = selectResultTwo[0].Losses;
+                    let totalScore = selectResultTwo[0].TotalScore;
+                    //add user game ID
+                    return([true, userIDResult, authKey, wins, losses, totalScore]);
                 }
-                catch{
-                    resolve([false, "null", false, false, false]);
+                else{
+                    return([false, "null", "null", "null", "null"]);
                 }
             }
-            else{
-                resolve([false, "null", false, false, false]);
+            catch(err){
+                console.log(err);
+                return([false, "null", "null", "null", "null"]);
             }
-        });
-    });  
-    return promise;
+        }
+    }
+    catch{
+        return([false, "null", false, false, false]);
+    }
 }
 
 async function register(Username, Password){
@@ -153,44 +150,51 @@ async function register(Username, Password){
     let year = date_ob.getFullYear();
     let month = ("0" + (date_ob.getMonth() + 1)).slice(-2);
     let date = ("0" + date_ob.getDate()).slice(-2);
-    let authKey = str.random(32); //random 16 value
-    let breakOut = false;
-   
+    let authKey = str.random(32); //random 32 bit value
     try{
-        var insertOne = "INSERT INTO authentication (Username, Password, LastLogin, AuthKey) VALUES ('" + Username + "', '" + Password + "', '"+ year +"-"+ month +"-"+ date +"', '" + authKey + "');"; 
+        var insertOne = `INSERT INTO authentication (Username, Password, LastLogin, AuthKey) VALUES ("${Username}", "${Password}", "${year}-${month}-${date}", "${authKey}");`; 
         await query(insertOne);
 
-        var queryOne = "SELECT UserID FROM authentication WHERE Username = '" + Username + "'";
-        let selectResultOne = await query(queryOne);
-        if (selectResultOne.length > 0){
-            let userIDResult = selectResultOne[0].UserID;
-            var insertTwo = "INSERT INTO player(UserID, Wins, Losses, TotalScore) VALUES ("+ userIDResult +", 0, 0, 0);";
-            let insertResultTwo = await query(insertTwo);
-            return([true, userIDResult, authKey]);
-        }
+        var insertTwo = `INSERT INTO player(Username, Wins, Losses, TotalScore) VALUES ("${Username}", 0, 0, 0);`;
+        await query(insertTwo);
+
+        var selectOne = `SELECT UserID FROM player WHERE Username = "${Username}";`
+        selectResultOne = await query(selectOne);
+        return([true, selectResultOne[0].UserID]);
     }
     catch(err){
         console.log(err);
+        return([false, false]);
     }
-    //let userIDResult;
-    return([false, false, false]);
 }
 async function getInfo(Username, UserID, AuthKey){
     try{
-        var queryOne = `SELECT AuthKey FROM authentication where UserID = ${UserID}`;
+        var queryOne = `SELECT AuthKey FROM authentication WHERE Username = ${Username};`;
         let selectResultOne = await query(queryOne);
         if (selectResultOne.length > 0){
             let authKeyResult = selectResultOne[0].AuthKey;
             if(authKeyResult == AuthKey){
-
+                var queryTwo = `SELECT UserGameID, UserOneShells, UserTwoShells, WhichTurn FROM savedgame WHERE UserID = ${UserID} ORDER BY SavedDate DESC;`;
+                let selectResultTwo = await query(queryTwo);
+                if(selectResultTwo.length > 0){
+                    let UserGameID = selectResultTwo[0].UserGameID;
+                    let UserOneShells = selectResultTwo[0].UserOneShells;
+                    let UserTwoShells = selectResultTwo[0].UserTwoShells;
+                    let WhichTurn = selectResultTwo[0].WhichTurn;
+                    return([true, UserGameID, UserOneShells, UserTwoShells, WhichTurn]);
+                }
+                else{
+                    return([false, "null", "null", "null", "null"]);
+                }
             }
             else{
-
+                return([false, "null", "null", "null", "null"]);
             }
         }
     }
     catch(err){
-
+        console.log(err);
+        return([false, "null", "null", "null", "null"]);
     }
 }
 //PORT LISTEN START
