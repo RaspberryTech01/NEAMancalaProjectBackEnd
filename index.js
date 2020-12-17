@@ -169,12 +169,12 @@ async function register(Username, Password){
 }
 async function getInfo(Username, UserID, AuthKey){
     try{
-        var queryOne = `SELECT AuthKey FROM authentication WHERE Username = ${Username};`;
+        var queryOne = `SELECT AuthKey FROM authentication WHERE Username = "${Username}";`;
         let selectResultOne = await query(queryOne);
         if (selectResultOne.length > 0){
             let authKeyResult = selectResultOne[0].AuthKey;
             if(authKeyResult == AuthKey){
-                var queryTwo = `SELECT UserGameID, UserOneShells, UserTwoShells, WhichTurn FROM savedgame WHERE UserID = ${UserID} ORDER BY SavedDate DESC;`;
+                var queryTwo = `SELECT UserGameID, UserOneShells, UserTwoShells, WhichTurn FROM savedgame WHERE UserID = "${UserID}" ORDER BY SavedDate DESC;`;
                 let selectResultTwo = await query(queryTwo);
                 if(selectResultTwo.length > 0){
                     let UserGameID = selectResultTwo[0].UserGameID;
