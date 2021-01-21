@@ -253,7 +253,7 @@ async function updateData(Username, UserID, AuthKey, Shells, Win){
                 else if(Win == false){
                     let losses = selectResultTwo.Losses;
                     let total = selectResultTwo.TotalScore;
-                    Losses++;
+                    losses++;
                     total = total + parseInt(Shells);
                     var updateOne = `UPDATE player SET Wins = "${wins}", TotalScore = "${authKey}" WHERE Username = "${Username}";`;
                     await query(updateOne);
