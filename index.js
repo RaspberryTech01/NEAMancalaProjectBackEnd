@@ -249,6 +249,7 @@ async function updateData(Username, UserID, AuthKey, Shells, Win){
                     total = total + parseInt(Shells);
                     var updateOne = `UPDATE player SET Wins = "${wins}", TotalScore = "${total}" WHERE Username = "${Username}";`;
                     await query(updateOne);
+                    return[true];
                 }
                 else if(Win == false){
                     let losses = selectResultTwo[0].Losses;
@@ -257,14 +258,15 @@ async function updateData(Username, UserID, AuthKey, Shells, Win){
                     total = total + parseInt(Shells);
                     var updateOne = `UPDATE player SET Losses = "${losses}", TotalScore = "${total}" WHERE Username = "${Username}";`;
                     await query(updateOne);
+                    return [true];
                 }
-                
+                return [false]
             }
         }
     }
     catch(err){
         console.log(err);
-        return([false, "null", "null", "null", "null"]);
+        return([false]);
     }
 }
 //PORT LISTEN START
