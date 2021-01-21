@@ -247,7 +247,7 @@ async function updateData(Username, UserID, AuthKey, Shells, Win){
                     let total = selectResultTwo.TotalScore;
                     wins++;
                     total = total + parseInt(Shells);
-                    var updateOne = `UPDATE player SET Wins = "${wins}", TotalScore = "${authKey}" WHERE Username = "${Username}";`;
+                    var updateOne = `UPDATE player SET Wins = "${wins}", TotalScore = "${total}" WHERE Username = "${Username}";`;
                     await query(updateOne);
                 }
                 else if(Win == false){
@@ -255,7 +255,7 @@ async function updateData(Username, UserID, AuthKey, Shells, Win){
                     let total = selectResultTwo.TotalScore;
                     losses++;
                     total = total + parseInt(Shells);
-                    var updateOne = `UPDATE player SET Losses = "${losses}", TotalScore = "${authKey}" WHERE Username = "${Username}";`;
+                    var updateOne = `UPDATE player SET Losses = "${losses}", TotalScore = "${total}" WHERE Username = "${Username}";`;
                     await query(updateOne);
                 }
                 
