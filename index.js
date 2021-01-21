@@ -90,6 +90,25 @@ app.post('/api/getinfo', async function (req, res) {
     };
     res.send(JSON.stringify(response)); 
 });
+app.post('/api/savegame', async function (req, res) {
+    let Username = req.body.Username; //TEST START
+    let UserID = req.body.UserID; 
+    let AuthKey = req.body.AuthKey;
+});
+
+app.post('/api/savedata', async function (req, res) {
+    let Username = req.body.Username; //TEST START
+    let UserID = req.body.UserID; 
+    let AuthKey = req.body.AuthKey;
+    let Shells = req.body.Shells;
+    let Win = req.body.Win;
+
+    let func = await updateData(Username, UserID, AuthKey, Shells, Win);
+    let response = { //test for JSON sending
+        ApiResponse: func[0]
+    };
+    res.send(JSON.stringify(response)); 
+});
 
 const query = (q) => new Promise((resolve, reject) => {
     con.query(q, function (err, result, fields) {
@@ -189,6 +208,57 @@ async function getInfo(Username, UserID, AuthKey){
             }
             else{
                 return([false, "null", "null", "null", "null"]);
+            }
+        }
+    }
+    catch(err){
+        console.log(err);
+        return([false, "null", "null", "null", "null"]);
+    }
+}
+
+async function saveGame(Username, UserID, AuthKey){
+    try{
+        var queryOne = `SELECT AuthKey FROM authentication WHERE Username = "${Username}";`;
+        let selectResultOne = await query(queryOne);
+        if (selectResultOne.length > 0){
+            let authKeyResult = selectResultOne[0].AuthKey;
+            if(authKeyResult == AuthKey){
+
+            }
+        }
+    }
+    catch(err){
+        console.log(err);
+        return([false, "null", "null", "null", "null"]);
+    }
+}
+async function updateData(Username, UserID, AuthKey, Shells, Win){
+    try{
+        var queryOne = `SELECT AuthKey FROM authentication WHERE Username = "${Username}";`;
+        let selectResultOne = await query(queryOne);
+        if (selectResultOne.length > 0){
+            let authKeyResult = selectResultOne[0].AuthKey;
+            if(authKeyResult == AuthKey){
+                var queryTwo = `SELECT * FROM authentication WHERE Username = "${Username}";`;
+                let selectResultTwo = await query(queryTwo);
+                if(Win == true){
+                    let wins = selectResultTwo.Wins;
+                    let total = selectResultTwo.TotalScore;
+                    wins++;
+                    total = total + parseInt(Shells);
+                    var updateOne = `UPDATE player SET Wins = "${wins}", TotalScore = "${authKey}" WHERE Username = "${Username}";`;
+                    await query(updateOne);
+                }
+                else if(Win == false){
+                    let losses = selectResultTwo.Losses;
+                    let total = selectResultTwo.TotalScore;
+                    Losses++;
+                    total = total + parseInt(Shells);
+                    var updateOne = `UPDATE player SET Wins = "${wins}", TotalScore = "${authKey}" WHERE Username = "${Username}";`;
+                    await query(updateOne);
+                }
+                
             }
         }
     }
