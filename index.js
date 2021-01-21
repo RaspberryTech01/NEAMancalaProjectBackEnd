@@ -243,16 +243,16 @@ async function updateData(Username, UserID, AuthKey, Shells, Win){
                 var queryTwo = `SELECT * FROM authentication WHERE Username = "${Username}";`;
                 let selectResultTwo = await query(queryTwo);
                 if(Win == true){
-                    let wins = selectResultTwo.Wins;
-                    let total = selectResultTwo.TotalScore;
+                    let wins = selectResultTwo[0].Wins;
+                    let total = selectResultTwo[0].TotalScore;
                     wins++;
                     total = total + parseInt(Shells);
                     var updateOne = `UPDATE player SET Wins = "${wins}", TotalScore = "${total}" WHERE Username = "${Username}";`;
                     await query(updateOne);
                 }
                 else if(Win == false){
-                    let losses = selectResultTwo.Losses;
-                    let total = selectResultTwo.TotalScore;
+                    let losses = selectResultTwo[0].Losses;
+                    let total = selectResultTwo[0].TotalScore;
                     losses++;
                     total = total + parseInt(Shells);
                     var updateOne = `UPDATE player SET Losses = "${losses}", TotalScore = "${total}" WHERE Username = "${Username}";`;
