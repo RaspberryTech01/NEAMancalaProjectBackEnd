@@ -240,7 +240,7 @@ async function updateData(Username, UserID, AuthKey, Shells, Win){
         if (selectResultOne.length > 0){
             let authKeyResult = selectResultOne[0].AuthKey;
             if(authKeyResult == AuthKey){
-                var queryTwo = `SELECT * FROM authentication WHERE Username = "${Username}";`;
+                var queryTwo = `SELECT * FROM player WHERE Username = "${Username}";`;
                 let selectResultTwo = await query(queryTwo);
                 if(Win == true){
                     let wins = selectResultTwo[0].Wins;
