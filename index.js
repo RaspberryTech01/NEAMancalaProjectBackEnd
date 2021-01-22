@@ -84,9 +84,9 @@ app.post('/api/getinfo', async function (req, res) {
     let response = { //test for JSON sending
         ApiResponse: func[0],
         UserGameID: func[1],
-        AISave: func[2],
         UserSave: func[2],
-        WhichTurn: func[3]
+        AISave: func[3],
+        WhichTurn: func[4]
     };
     res.send(JSON.stringify(response)); 
 });
