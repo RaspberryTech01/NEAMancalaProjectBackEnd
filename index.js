@@ -242,7 +242,7 @@ async function saveGame(Username, UserID, AuthKey, UserOneShells, UserTwoShells,
                     ('00' + date.getUTCMinutes()).slice(-2) + ':' + 
                     ('00' + date.getUTCSeconds()).slice(-2);
                 var insertOne = `INSERT INTO savedgame (UserID, UserOneShells, UserTwoShells, WhichTurn, SavedDate) VALUES
-                ("${UserID}", "${UserOneShells}", "${UserTwoShells}", "${WhichTurn}", "${year}-${month}-${date}");`
+                ("${UserID}", "${UserOneShells}", "${UserTwoShells}", "${WhichTurn}", "${date}");`
                 await query(insertOne)
                 return([true])
             }
