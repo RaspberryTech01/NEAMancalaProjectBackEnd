@@ -99,8 +99,11 @@ app.post('/api/savegame', async function (req, res) {
     let AISave = req.body.AISave;
     let WhichTurn = req.body.WhichTurn;
 
-    let func = await saveGame(Username, UserID, AuthKey, Shells, Win);
-
+    let func = await saveGame(Username, UserID, AuthKey, WhichTurn, Win);
+    let response = { //test for JSON sending
+        ApiResponse: func[0]
+    };
+    res.send(JSON.stringify(response)); 
 });
 
 app.post('/api/savedata', async function (req, res) {
