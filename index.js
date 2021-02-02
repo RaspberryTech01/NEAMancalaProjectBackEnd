@@ -94,6 +94,13 @@ app.post('/api/savegame', async function (req, res) {
     let Username = req.body.Username; //TEST START
     let UserID = req.body.UserID; 
     let AuthKey = req.body.AuthKey;
+
+    let UserSave = req.body.UserSave;
+    let AISave = req.body.AISave;
+    let WhichTurn = req.body.WhichTurn;
+
+    let func = await saveGame(Username, UserID, AuthKey, Shells, Win);
+
 });
 
 app.post('/api/savedata', async function (req, res) {
@@ -217,20 +224,27 @@ async function getInfo(Username, UserID, AuthKey){
     }
 }
 
-async function saveGame(Username, UserID, AuthKey){
+async function saveGame(Username, UserID, AuthKey, UserOneShells, UserTwoShells, WhichTurn){
     try{
         var queryOne = `SELECT AuthKey FROM authentication WHERE Username = "${Username}";`;
         let selectResultOne = await query(queryOne);
         if (selectResultOne.length > 0){
             let authKeyResult = selectResultOne[0].AuthKey;
             if(authKeyResult == AuthKey){
-
+                let currentDate = new Date()
+                var insertOne = `INSERT INTO savedgame (UserID, UserOneShells, UserTwoShells, WhichTurn, SavedDate) VALUES
+                ("${UserID}", "${UserOneShells}", "${UserTwoShells}", "${WhichTurn}", "${currentDate}");`
+                await query(insertOne)
+                return([true])
+            }
+            else{
+                return([false])
             }
         }
     }
     catch(err){
         console.log(err);
-        return([false, "null", "null", "null", "null"]);
+        return([false]);
     }
 }
 async function updateData(Username, UserID, AuthKey, Shells, Win){
@@ -261,6 +275,9 @@ async function updateData(Username, UserID, AuthKey, Shells, Win){
                     return [true];
                 }
                 return [false]
+            }
+            else{
+                return([false])
             }
         }
     }
