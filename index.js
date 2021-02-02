@@ -239,7 +239,7 @@ async function saveGame(Username, UserID, AuthKey, UserOneShells, UserTwoShells,
                 let month = ("0" + (date_ob.getMonth() + 1)).slice(-2);
                 let date = ("0" + date_ob.getDate()).slice(-2);
                 var insertOne = `INSERT INTO savedgame (UserID, UserOneShells, UserTwoShells, WhichTurn, SavedDate) VALUES
-                ("${UserID}", "${UserOneShells}", "${UserTwoShells}", "${WhichTurn}", "${date}");`
+                ("${UserID}", "${UserOneShells}", "${UserTwoShells}", "${WhichTurn}", "${year}-${month}-${date}");`
                 await query(insertOne)
                 return([true])
             }
