@@ -234,9 +234,12 @@ async function saveGame(Username, UserID, AuthKey, UserOneShells, UserTwoShells,
         if (selectResultOne.length > 0){
             let authKeyResult = selectResultOne[0].AuthKey;
             if(authKeyResult == AuthKey){
-                let currentDate = new Date()
+                let date_ob = new Date();
+                let year = date_ob.getFullYear();
+                let month = ("0" + (date_ob.getMonth() + 1)).slice(-2);
+                let date = ("0" + date_ob.getDate()).slice(-2);
                 var insertOne = `INSERT INTO savedgame (UserID, UserOneShells, UserTwoShells, WhichTurn, SavedDate) VALUES
-                ("${UserID}", "${UserOneShells}", "${UserTwoShells}", "${WhichTurn}", "${currentDate}");`
+                ("${UserID}", "${UserOneShells}", "${UserTwoShells}", "${WhichTurn}", "${date}");`
                 await query(insertOne)
                 return([true])
             }
