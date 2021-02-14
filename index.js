@@ -119,6 +119,11 @@ app.post('/api/savedata', async function (req, res) {
     };
     res.send(JSON.stringify(response)); 
 });
+app.post('/api/test', async function (req, res) {
+    let func = await getLeaderboard();
+    res.send(JSON.stringify(func));
+});
+
 
 const query = (q) => new Promise((resolve, reject) => {
     con.query(q, function (err, result, fields) {
@@ -293,6 +298,26 @@ async function updateData(Username, UserID, AuthKey, Shells, Win){
     catch(err){
         console.log(err);
         return([false]);
+    }
+}
+async function getLeaderboard(){
+    try{
+        let result
+        var queryOne = `SELECT Username, TotalScore FROM player ORDER BY TotalScore DESC;`
+        if(queryOne < 3){
+            queryOne.forEach(row => {
+                
+            });
+            return queryOne;
+        }
+        else{
+            for(let i; i < 4; i++){
+
+            }
+        }
+    }
+    catch{
+
     }
 }
 //PORT LISTEN START
