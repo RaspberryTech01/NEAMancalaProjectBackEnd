@@ -304,11 +304,12 @@ async function getLeaderboard(){
     try{
         let result
         var queryOne = `SELECT Username, TotalScore FROM player ORDER BY TotalScore DESC;`
-        if(queryOne < 3){
-            queryOne.forEach(row => {
+        let selectResultOne = await query(queryOne);
+        if(selectResultOne < 3){
+            selectResultOne.forEach(row => {
                 
             });
-            return queryOne;
+            return selectResultOne;
         }
         else{
             for(let i; i < 4; i++){
