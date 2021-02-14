@@ -119,9 +119,18 @@ app.post('/api/savedata', async function (req, res) {
     };
     res.send(JSON.stringify(response)); 
 });
-app.post('/api/test', async function (req, res) {
+
+app.post('/api/leaderboard', async function (req, res) {
     let func = await getLeaderboard();
-    res.send(JSON.stringify(func));
+    let response = { //test for JSON sending
+        UserOneName: func[0],
+        UserOnePoints: func[1],
+        UserTwoName: func[2],
+        UserTwoPoints: func[3],
+        UserThreeName: func[4],
+        UserThreePoints: func[5]
+    };
+    res.send(JSON.stringify(response));
 });
 
 
@@ -305,16 +314,20 @@ async function getLeaderboard(){
         let result
         var queryOne = `SELECT Username, TotalScore FROM player ORDER BY TotalScore DESC;`
         let selectResultOne = await query(queryOne);
-        if(selectResultOne < 3){
-            selectResultOne.forEach(row => {
-                
-            });
-            return selectResultOne;
+        if(selectResultOne < 1){
+            return["None", 0, "None", 0, "None", 0]
+        }
+        else if(selectResultOne < 2){
+            return[selectResultOne[0].Username, selectResultOne[0].TotalScore, "None", 0, "None", 0]
+        }
+        else if(selectResultOne < 3){
+            return[selectResultOne[0].Username, selectResultOne[0].TotalScore, 
+            selectResultOne[1].Username, selectResultOne[1].TotalScore, "None", 0]
         }
         else{
-            for(let i; i < 4; i++){
-
-            }
+            return[selectResultOne[0].Username, selectResultOne[0].TotalScore, 
+            selectResultOne[1].Username, selectResultOne[1].TotalScore,
+             selectResultOne[2].Username, selectResultOne[2].TotalScore]
         }
     }
     catch{
